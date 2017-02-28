@@ -1,0 +1,6 @@
+/bin/*.pdb
+/bin/*.exp
+/*.suo
+/*.ncb
+
+*.user
