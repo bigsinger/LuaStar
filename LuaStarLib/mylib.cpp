@@ -54,6 +54,7 @@ static const struct luaL_reg starlib [] = {
 	{"md5", md5},
 	{"trim", trim},
 	{"utf8s2ms", utf8s2ms},
+	{"startswith", startswith},
 	{"reversefind", reversefind},
 	{"unescapeunicode", unescapeunicode},
 	{"filterinvalidfilename", filterinvalidfilename},
@@ -629,6 +630,33 @@ int runbat(lua_State *L)
 	}
 	bRet = Star::Common::RunBat(strBatContent, lpszWorkPath, dwMilliseconds);
 	lua_pushboolean(L, bRet);
+	return 1;
+}
+
+int startswith(lua_State* L)
+{
+	CString strMain;
+	CString strHead;
+
+	int n = lua_gettop(L);
+	if ( n >= 1 ) {
+		if ( lua_isstring(L, 1) ) {
+			strMain = lua_tostring(L, 1);
+		}
+	}
+	if ( n >= 2 ) {
+		if ( lua_isstring(L, 2) ) {
+			strHead = lua_tostring(L, 2);
+		}
+	}
+
+	if ( strHead.IsEmpty()==FALSE ) {
+		if ( strMain.Find(strHead) != 0 ) {
+			strMain = strHead + strMain;
+		}
+	}
+
+	lua_pushstring(L, strMain);
 	return 1;
 }
 
