@@ -266,10 +266,16 @@ int gethtmlex(lua_State *L)
 {
 	CString strHtml;
 	const char *lpszStr = NULL;
+	const char *lpszRefer = NULL;
 	int n =  lua_gettop(L);
 	if ( n > 0 ){
 		if ( lua_isstring(L, 1) ) {
 			lpszStr = lua_tostring(L, 1);
+		}
+	}
+	if ( n > 1 ) {
+		if ( lua_isstring(L, 2) ) {
+			lpszRefer = lua_tostring(L, 2);
 		}
 	}
 
@@ -278,7 +284,7 @@ int gethtmlex(lua_State *L)
 		return 1;
 	}
 
-	GetHttpFileContentEx(lpszStr, strHtml);
+	GetHttpFileContentEx(lpszStr, strHtml, 10, lpszRefer);
 	lua_pushlstring(L, (const char *)(LPCTSTR)strHtml, strHtml.GetLength());
 	return 1;
 }
