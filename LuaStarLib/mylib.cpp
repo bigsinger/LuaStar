@@ -749,7 +749,8 @@ int getfilesize(lua_State* L)
 //////////////////////////////////////////////////////////////////////////
 
 int help(lua_State *L) {
-	string strUsage = "star functions:\n\n";
+	string strUsage = __DATE__;
+	strUsage.append("\nstar functions:\n");
 	int nCount = _countof(starlib);
 
 	for ( int i = 0; i < nCount; ++i ) {
