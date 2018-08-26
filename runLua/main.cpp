@@ -46,7 +46,7 @@ bool RunLuaFile(const char *lpszLuaFile, int argc, const char *argv[])
 
 int main(int argc, const char *argv[])
 {
-	const char* lpszLuaFile = NULL;
+	const char* lpszLuaFile = "main.lua";	// 默认执行当前目录下的main.lua
 	const char **args = NULL;
 	int nLuaArgs = 0;
 
@@ -58,12 +58,8 @@ int main(int argc, const char *argv[])
 		}
 	}
 
-	if ( lpszLuaFile!=NULL ){
-		if ( RunLuaFile((const char *)lpszLuaFile, nLuaArgs, args)==false ) {
-			getc(stdin);
-		}
-	}else{
-		printf("usage: LuaFile, [args]\nargs will be passed to LuaFile. 2009-08-02 by sing");
+	if ( RunLuaFile((const char *)lpszLuaFile, nLuaArgs, args)==false ) {
+		printf("\n\nusage: LuaFile, [args]\nargs will be passed to LuaFile. 2009-08-02 by sing");
 		getc(stdin);
 	}
 

@@ -95,7 +95,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ProjectDir)\..\..\lib\2008share\"
+			OutputDirectory="$(ProjectDir)\..\bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="F:\open\lib\lua;F:\open\lib"
+				AdditionalIncludeDirectories="F:\bigsinger\lib\trunk\lua"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -139,7 +139,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="F:\open\lib\2008share"
+				AdditionalLibraryDirectories="F:\bigsinger\lib\trunk\2008share"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
