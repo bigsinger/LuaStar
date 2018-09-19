@@ -1,21 +1,21 @@
 ﻿
 extern "C"
 {
-	#include <lua.h>
-	#include <lauxlib.h>
-	#include <lualib.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 }
 
 #ifdef _DEBUG
-#pragma comment(lib,"luaD.lib")
+#pragma comment(lib,"lua53D.lib")
 #else
-#pragma comment(lib,"lua.lib")
+#pragma comment(lib,"lua53.lib")
 #endif
 
 bool RunLuaFile(const char *lpszLuaFile, int argc, const char *argv[])
 {
 	const char* szError = NULL;
-	lua_State* L = lua_open();
+	lua_State* L = luaL_newstate();
 	if ( L ){
 		luaL_openlibs(L);
 		if ( luaL_loadfile(L, lpszLuaFile) ) {
