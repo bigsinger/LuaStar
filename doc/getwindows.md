@@ -21,4 +21,4 @@ t = star.getwindows() for k,v in pairs(t) do if v.visible and v.width > 1000 and
 
 输出示例：
 ```none
-``
+```
