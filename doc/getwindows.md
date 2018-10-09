@@ -21,4 +21,8 @@ t = star.getwindows() for k,v in pairs(t) do if v.visible and v.width > 1000 and
 
 输出示例：
 ```none
+132204  904     141     1759    1001    2576    QTOyzOAwJG
+918278  896     110     1775    1040    5952    XXXXX       XXXX
+393940  0       0       1920    1040    4220            ApplicationFrameWindow
+65824   0       0       1920    1080    4220    Program Manager Progman
 ```
