@@ -11,7 +11,7 @@ pid = star.getpid('hypprotect.exe') t = star.findhide('', pid)
 ```
 
 输出示例：
-```lua
+```none
 start find abnormal mem page( enum abnormal VirtualQueryEx )
 find nothing abnormal!
 
