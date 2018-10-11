@@ -1,11 +1,13 @@
 # star.d3d
 3D游戏HOOK检测，主要检测虚表中函数：IDXGISwapChain::Present、IDXGISwapChain::ResizeBuffers被HOOK情况。
 
+
+先把dll注入到游戏进程并打开debugview，然后执行以下脚本：
 ```lua
-star.d3d('init') star.d3d('hook') star.msgbox(star.d3d('info')) star.d3d('unhook')
+star.setlog('trace') star.d3d('init') star.print(star.d3d('info')) star.d3d('hook') star.print(star.d3d('info')) star.d3d('unhook')
 ```
 
-虚表函数共35个，序号以0开始，注意观察第8、13个函数地址。
+虚表函数共35个，序号以0开始，注意观察第8、13个函数地址，注意不要错认了自己的HOOK函数。
 ```none
 obj: 000000008EBCFEC0 return by getObjFromCreateDeviceAndSwapChain()
 00 000007FEE89B5930
