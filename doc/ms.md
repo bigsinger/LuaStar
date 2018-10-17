@@ -1,28 +1,30 @@
 # 枚举模块列表
 ```lua
-t = star.getms(integer pid, [string cmdtype])
+t = star.ms(integer pid, [string cmdtype])
 ```
 pid为-1时获取本进程的模块信息。
 
+
 cmdtype可选字符串：
 - sys: 获取内核模块
-- hide: 获取隐藏模块
+- hide: 获取隐藏模块，仅仅是隐藏模块，隐藏代码请使用[findhide 查找隐藏模块/隐藏代码](.findhide.md)
+- sus:	获取可疑模块，策略：模块路径有问题，时间有问题。 技术实现：TH32CS_SNAPMODULE ModuleFirst  ModuleNext
 - 不填或其他：R3模块列表
 
 ## 获取模块列表
 ```lua
-pid = star.getpid('notepad.exe') t = star.getms(pid) for k, v in pairs(t) do print(v) end
+pid = star.getpid('notepad.exe') t = star.ms(pid) for k, v in pairs(t) do print(v) end
 ```
 
 ## 获取内核模块
 ```lua
 pid = star.getpid('notepad.exe')
-t = star.getms(pid, 'sys')
+t = star.ms(pid, 'sys')
 ```
 
 一行脚本获取当前进程的内核模块：
 ```lua
-t = star.getms(-1, 'sys') for k, v in pairs(t) do if star.file('exist', v) then print(v) else print(v, 'not exist') end end
+t = star.ms(-1, 'sys') for k, v in pairs(t) do if star.file('exist', v) then print(v) else print(v, 'not exist') end end
 ```
 
 输出示例：
