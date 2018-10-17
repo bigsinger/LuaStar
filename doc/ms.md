@@ -7,7 +7,7 @@ pid为-1时获取本进程的模块信息。
 
 cmdtype可选字符串：
 - sys: 获取内核模块
-- hide: 获取隐藏模块，仅仅是隐藏模块，隐藏代码请使用[findhide 查找隐藏模块/隐藏代码](.findhide.md)
+- hide: 获取隐藏模块，仅仅是隐藏模块，隐藏代码请使用[findhide 查找隐藏模块/隐藏代码](./findhide.md)
 - sus:	获取可疑模块，策略：模块路径有问题，时间有问题。 技术实现：TH32CS_SNAPMODULE ModuleFirst  ModuleNext
 - 不填或其他：R3模块列表
 
