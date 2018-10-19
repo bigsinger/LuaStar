@@ -1,7 +1,7 @@
 # 查找某游戏可疑外挂
 ```lua
 function check()
-	t = star.getwindows() for k,v in pairs(t) do if v.visible and v.width > 1000 and v.height > 900 then print(string.format('%X',v.hwnd), v.left, v.top, v.width, v.height, v.pid, v.text, v.class) end end
+	t = star.getwindows() for k,v in pairs(t) do if v.width > 1000 and v.height > 900 then print(string.format('%X',v.hwnd), v.left, v.top, v.width, v.height, v.pid, v.text, v.class) end end
 	pid = star.getpid('game.exe')
 	if pid <= 0 then return end
 	 print('\nfind sus dll:\n')
