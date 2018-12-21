@@ -1,42 +1,33 @@
 #include "stdafx.h"
 #include "mylib.h"
-#include <StarLib/File/File.h>
 #include <StarLib/Common/common.h>
-#include <StarLib/Common/zipHelper.h>
+#include <StarLib/File/FileUnit.h>
+#include <StarLib/File/zipHelper.h>
 #include <StarLib/net/htmldown.h>
-#include <starlib/net/httppost.h>
+#include <Starlib/net/httppost.h>
 #include <StarLib/MD5/Md5.h>
 #include <atlimage.h>
 #include <string>
 using namespace std;
 
 
-
 #pragma warning(disable:4311)
 
-#ifdef __cplusplus
 extern "C" {
-#endif
-
 #include <zlib/zlib.h>
 #include <zlib/zconf.h>
-#include <lua/lauxlib.h>
-#include <lua/lualib.h>
-
-#ifdef __cplusplus
 }
-#endif
 
 
 #ifdef _DEBUG
-#pragma comment(lib,"luaD.lib")
+#pragma comment(lib,"lua53D.lib")
 #ifdef _USRDLL
 #pragma comment(lib,"zlibD.lib")
 #pragma comment(lib,"zipD.lib")
 #endif
 //#pragma comment(lib,"User32.lib")
 #else
-#pragma comment(lib,"lua.lib")
+#pragma comment(lib,"lua53.lib")
 #ifdef _USRDLL
 #pragma comment(lib,"zlib.lib")
 #pragma comment(lib,"zip.lib")
@@ -47,8 +38,9 @@ extern "C" {
 
 #define MODULE_NAME_STAR	"star"
 
-static const struct luaL_reg starlib [] = { 
 
+
+extern const struct luaL_Reg starlib[] = {
 	{"msgbox", msgbox},
 	{"log", log},
 	{"md5", md5},
@@ -106,19 +98,24 @@ static const struct luaL_reg starlib [] = {
 	{"crc32", _crc32},
 #endif
 
-	{NULL, NULL} /* sentinel */ 
+	{NULL, NULL} /* sentinel */
 };
-
 //////////////////////////////////////////////////////////////////////////
 
 #ifdef _MANAGED
 #pragma managed(push, off)
 #endif
 
+int openMyLuaLib(lua_State *L) {
+	luaL_newlibtable(L, starlib);
+	lua_pushvalue(L, -1);
+	luaL_setfuncs(L, starlib, 0);
+	return 1;
+}
 
 extern "C" __declspec(dllexport) int luaopen_star(lua_State *L) { 
 	CoInitialize(NULL);
-	luaL_register(L, MODULE_NAME_STAR, starlib);	
+	luaL_requiref(L, MODULE_NAME_STAR, openMyLuaLib, 1);
 
 	return 1; 
 }
@@ -217,9 +214,9 @@ int log(lua_State *L)
 	}
 
 	if ( strLogFile.IsEmpty() ) {
-		strLogFile = Star::Common::GetParentPath(GetLuaFilePath(L)) + "log.txt";
+		strLogFile = Star::PathUnit::GetParentPath(GetLuaFilePath(L)) + "log.txt";
 	}else if ( strLogFile.Find(':')==-1 ) {
-		strLogFile = Star::Common::GetParentPath(GetLuaFilePath(L)) + strLogFile;
+		strLogFile = Star::PathUnit::GetParentPath(GetLuaFilePath(L)) + strLogFile;
 	}
 
 	HANDLE hFile = CreateFile(strLogFile, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, NULL, NULL);
@@ -326,7 +323,7 @@ int utf8s2ms(lua_State *L)
 		return 1;
 	}
 
-	CString strText = Star::Common::utf8s2ts(lpszStr);
+	CString strText = Star::StrUnit::utf8s2ts(lpszStr);
 
 	lua_pushlstring(L, (const char *)(LPCTSTR)strText, strText.GetLength());
 	return 1;
@@ -351,7 +348,7 @@ int openurl(lua_State *L)
 	}
 
 	if ( strUrl.empty()==false ){
-		bRet = (Star::Common::OpenUrl(strUrl.c_str(),nshowcmd) > (HINSTANCE)((PBYTE)32+NULL));
+		bRet = (Star::SysUnit::OpenUrl(strUrl.c_str(),nshowcmd) > (HINSTANCE)((PBYTE)32+NULL));
 	}
 
 	lua_pushboolean(L,bRet);
@@ -393,7 +390,7 @@ int unescapeunicode(lua_State *L)
 	int n = lua_gettop(L);
 	if ( n>0 ){
 		if ( lua_isstring(L,1) ){
-			str = Star::Common::unescapeunicode(lua_tostring(L,1));
+			str = Star::StrUnit::unescapeunicode(lua_tostring(L,1));
 		}
 	}
 
@@ -407,7 +404,7 @@ int filterinvalidfilename(lua_State *L)
 	int n = lua_gettop(L);
 	if ( n>0 ){
 		if ( lua_isstring(L,1) ){
-			str = Star::Common::filterinvalidfilename(lua_tostring(L,1));
+			str = Star::StrUnit::filterinvalidfilename(lua_tostring(L,1));
 		}
 	}
 
@@ -422,7 +419,7 @@ int unescapexml(lua_State *L)
 	if ( n>0 ){
 		if ( lua_isstring(L,1) ){
 			str = lua_tostring(L,1);
-			Star::Common::unescapexml(str);
+			Star::StrUnit::unescapexml(str);
 		}
 	}
 
@@ -445,7 +442,7 @@ int encodeurlutf8(lua_State *L)
 		return 1;
 	}
 
-	CString strResult = Star::Common::UTF8EncodeURI(lpszStr);
+	CString strResult = Star::StrUnit::UTF8EncodeURI(lpszStr);
 	lua_pushlstring(L, (const char *)(LPCTSTR)strResult, strResult.GetLength());
 	return 1;
 }
@@ -465,7 +462,7 @@ int encodeurlgbk(lua_State *L)
 		return 1;
 	}
 
-	CString strResult = Star::Common::GBKEncodeURI(lpszStr);
+	CString strResult = Star::StrUnit::GBKEncodeURI(lpszStr);
 	lua_pushlstring(L, (const char *)(LPCTSTR)strResult, strResult.GetLength());
 	return 1;
 }
@@ -477,7 +474,7 @@ int sendhttpdata(lua_State *L)
 	CString strHost;
 	CString strPath;
 	CString strHeaders;
-	vector<CString>vtHeaders;
+	list<CString>vtHeaders;
 	CString strSendData;
 	CString strNewCookie;
 	int nMethod = 0;
@@ -515,7 +512,7 @@ int sendhttpdata(lua_State *L)
 		}
 	}
 
-	Star::Common::SplitString(strHeaders, "\n", vtHeaders);
+	Star::StrUnit::split(strHeaders, "\n", vtHeaders);
 	strRet = SendHttpData(strHost, strPath, vtHeaders, strSendData, strNewCookie, bNeedDocode, nMethod);
 	lua_pushlstring(L, (const char *)(LPCTSTR)strRet, strRet.GetLength());
 	lua_pushlstring(L, (const char *)(LPCTSTR)strNewCookie, strNewCookie.GetLength());
@@ -634,7 +631,7 @@ int runbat(lua_State *L)
 	if ( strWorkPath.IsEmpty()==FALSE ) {
 		lpszWorkPath = strWorkPath;
 	}
-	bRet = Star::Common::RunBat(strBatContent, lpszWorkPath, dwMilliseconds);
+	bRet = Star::SysUnit::RunBat(strBatContent, lpszWorkPath, dwMilliseconds);
 	lua_pushboolean(L, bRet);
 	return 1;
 }

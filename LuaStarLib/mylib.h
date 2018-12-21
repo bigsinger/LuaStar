@@ -1,10 +1,14 @@
 #pragma once
 
 extern "C" {
-	#include <lua/lua.h>
+#include <lua53/lua.h>
+#include <lua53/lualib.h>
+#include <lua53/lauxlib.h>
 }
 
 extern "C" __declspec(dllexport) int luaopen_star(lua_State *L);
+int openMyLuaLib(lua_State *L);
+extern const struct luaL_Reg starlib[];
 
 int msgbox(lua_State *L);
 int log(lua_State *L);
