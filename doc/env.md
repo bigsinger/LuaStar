@@ -4,9 +4,10 @@
 print(os.getenv('PATH'))
 ```
 
-## 添加路径到系统环境变量
+# 添加路径到系统环境变量
 - **star.addenv(string dirpath)**
 
+例如添加Python安装目录到环境变量中：
 ```lua
 star.addenv([[D:\Python\Python37]]) star.addenv([[D:\Python\Python37\Scripts]])
 ```
