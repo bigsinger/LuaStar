@@ -8,3 +8,5 @@
 - [d3d 3D游戏HOOK检测](./doc/d3d.md)
 - [os.time](./doc/time.md)
 - [example 示例](./doc/example.md)
+- [注册表](./doc/reg.md)
+- [环境变量](./doc/env.md)
