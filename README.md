@@ -10,3 +10,4 @@
 - [example 示例](./doc/example.md)
 - [注册表](./doc/reg.md)
 - [环境变量](./doc/env.md)
+- [inputbox](./doc/inputbox.md)
