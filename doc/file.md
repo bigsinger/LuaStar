@@ -22,3 +22,15 @@ star.file(string cmd, string filepath)
 
 ## 参数 filepath
 文件全路径
+
+
+# star.read
+返回全部文件内容，适合比较小的纯文本文件。
+```lua
+s = star.read(string filepath)
+```
+等效于：
+
+```lua
+s = star.file('read', string filepath)
+```
