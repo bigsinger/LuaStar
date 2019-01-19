@@ -1,5 +1,3 @@
---require'star'
---star.setlog('print')
-print('hello Lua')
---star.scanhex('AABBCCDDEE', {pname='test.exe'})
+require'star'
+print(star.help())
 os.execute('pause')
