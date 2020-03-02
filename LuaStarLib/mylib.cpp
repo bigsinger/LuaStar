@@ -239,7 +239,7 @@ int log(lua_State *L)
 //html gethtml(url) Ê§°Ü·µ»Ø''¿Õ´®£¬·Çnil 
 int gethtml(lua_State *L)
 {
-	CString strHtml;
+	string strHtml;
 	const char *lpszStr = NULL;
 	int n =  lua_gettop(L);
 	if ( n > 0 ){
@@ -254,14 +254,14 @@ int gethtml(lua_State *L)
 	}
 
 	GetHttpFileContent(lpszStr, strHtml);
-	lua_pushlstring(L, (const char *)(LPCTSTR)strHtml, strHtml.GetLength());
+	lua_pushlstring(L, strHtml.c_str(), strHtml.length());
 	return 1;
 }
 
 //html gethtml(url) Ê§°Ü·µ»Ø''¿Õ´®£¬·Çnil 
 int gethtmlex(lua_State *L)
 {
-	CString strHtml;
+	string strHtml;
 	const char *lpszStr = NULL;
 	const char *lpszRefer = NULL;
 	int n =  lua_gettop(L);
@@ -282,13 +282,13 @@ int gethtmlex(lua_State *L)
 	}
 
 	GetHttpFileContentEx(lpszStr, strHtml, 10, lpszRefer);
-	lua_pushlstring(L, (const char *)(LPCTSTR)strHtml, strHtml.GetLength());
+	lua_pushlstring(L, strHtml.c_str(), strHtml.length());
 	return 1;
 }
 
 int urldownload2str(lua_State *L)
 {
-	CString strHtml;
+	string strHtml;
 	const char *lpszStr = NULL;
 	int n =  lua_gettop(L);
 	if ( n > 0 ){
@@ -303,7 +303,7 @@ int urldownload2str(lua_State *L)
 	}
 
 	URLDownloadToString(lpszStr, strHtml);
-	lua_pushlstring(L, (const char *)(LPCTSTR)strHtml, strHtml.GetLength());
+	lua_pushlstring(L, strHtml.c_str(), strHtml.length());
 	return 1;
 }
 
@@ -323,9 +323,8 @@ int utf8s2ms(lua_State *L)
 		return 1;
 	}
 
-	CString strText = Star::StrUnit::utf8s2ts(lpszStr);
-
-	lua_pushlstring(L, (const char *)(LPCTSTR)strText, strText.GetLength());
+	string strText = Star::StrUnit::utf8s2ts(lpszStr);
+	lua_pushlstring(L, strText.c_str(), strText.length());
 	return 1;
 }
 
@@ -442,8 +441,8 @@ int encodeurlutf8(lua_State *L)
 		return 1;
 	}
 
-	CString strResult = Star::StrUnit::UTF8EncodeURI(lpszStr);
-	lua_pushlstring(L, (const char *)(LPCTSTR)strResult, strResult.GetLength());
+	string strResult = Star::StrUnit::UTF8EncodeURI(lpszStr);
+	lua_pushlstring(L, strResult.c_str(), strResult.length());
 	return 1;
 }
 
