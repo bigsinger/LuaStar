@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "mylib.h"
+#include <StarLib/StrUnit.h>
 #include <StarLib/Common/common.h>
 #include <StarLib/File/FileUnit.h>
 #include <StarLib/File/zipHelper.h>
@@ -237,18 +238,17 @@ int log(lua_State *L)
 }
 
 //html gethtml(url) Ê§°Ü·µ»Ø''¿Õ´®£¬·Çnil 
-int gethtml(lua_State *L)
-{
+int gethtml(lua_State *L) {
 	string strHtml;
 	const char *lpszStr = NULL;
-	int n =  lua_gettop(L);
-	if ( n > 0 ){
-		if ( lua_isstring(L, 1) ) {
+	int n = lua_gettop(L);
+	if (n > 0) {
+		if (lua_isstring(L, 1)) {
 			lpszStr = lua_tostring(L, 1);
 		}
 	}
 
-	if ( lpszStr==NULL ){
+	if (lpszStr == NULL) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -259,24 +259,19 @@ int gethtml(lua_State *L)
 }
 
 //html gethtml(url) Ê§°Ü·µ»Ø''¿Õ´®£¬·Çnil 
-int gethtmlex(lua_State *L)
-{
+int gethtmlex(lua_State *L) {
 	string strHtml;
 	const char *lpszStr = NULL;
 	const char *lpszRefer = NULL;
-	int n =  lua_gettop(L);
-	if ( n > 0 ){
-		if ( lua_isstring(L, 1) ) {
-			lpszStr = lua_tostring(L, 1);
-		}
+	int n = lua_gettop(L);
+	if (n > 0 && lua_isstring(L, 1)) {
+		lpszStr = lua_tostring(L, 1);
 	}
-	if ( n > 1 ) {
-		if ( lua_isstring(L, 2) ) {
-			lpszRefer = lua_tostring(L, 2);
-		}
+	if (n > 1 && lua_isstring(L, 2)) {
+		lpszRefer = lua_tostring(L, 2);
 	}
 
-	if ( lpszStr==NULL ){
+	if (lpszStr == NULL) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -286,18 +281,17 @@ int gethtmlex(lua_State *L)
 	return 1;
 }
 
-int urldownload2str(lua_State *L)
-{
-	string strHtml;
+int urldownload2str(lua_State *L) {
+	std::string strHtml;
 	const char *lpszStr = NULL;
-	int n =  lua_gettop(L);
-	if ( n > 0 ){
-		if ( lua_isstring(L, 1) ) {
+	int n = lua_gettop(L);
+	if (n > 0) {
+		if (lua_isstring(L, 1)) {
 			lpszStr = lua_tostring(L, 1);
 		}
 	}
-	
-	if ( lpszStr==NULL ){
+
+	if (lpszStr == NULL) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -308,17 +302,16 @@ int urldownload2str(lua_State *L)
 }
 
 //utf8´®×ª»»Îª¶à×Ö½ÚµÄ´®
-int utf8s2ms(lua_State *L)
-{
+int utf8s2ms(lua_State *L) {
 	const char *lpszStr = NULL;
 	int n = lua_gettop(L);
-	if ( n > 0 ){
-		if ( lua_isstring(L, 1) ) {
+	if (n > 0) {
+		if (lua_isstring(L, 1)) {
 			lpszStr = lua_tostring(L, 1);
 		}
 	}
 
-	if ( lpszStr==NULL ){
+	if (lpszStr == NULL) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -411,18 +404,16 @@ int filterinvalidfilename(lua_State *L)
 	return 1;
 }
 
-int unescapexml(lua_State *L)
-{
-	CString str;
+int unescapexml(lua_State *L) {
+	string str;
 	int n = lua_gettop(L);
-	if ( n>0 ){
-		if ( lua_isstring(L,1) ){
-			str = lua_tostring(L,1);
-			Star::StrUnit::unescapexml(str);
+	if (n > 0) {
+		if (lua_isstring(L, 1)) {
+			str = Star::StrUnit::unescapexml(lua_tostring(L, 1));
 		}
 	}
 
-	lua_pushstring(L,str);
+	lua_pushstring(L, str.c_str());
 	return 1;
 }
 
