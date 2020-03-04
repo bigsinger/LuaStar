@@ -241,11 +241,17 @@ int log(lua_State *L)
 int gethtml(lua_State *L) {
 	string strHtml;
 	const char *lpszStr = NULL;
+	const char *lpszRefer = NULL;
+	const char *lpszCookie = NULL;
 	int n = lua_gettop(L);
-	if (n > 0) {
-		if (lua_isstring(L, 1)) {
-			lpszStr = lua_tostring(L, 1);
-		}
+	if (n > 0 && lua_isstring(L, 1)) {
+		lpszStr = lua_tostring(L, 1);
+	}
+	if (n > 1 && lua_isstring(L, 2)) {
+		lpszRefer = lua_tostring(L, 2);
+	}
+	if (n > 2 && lua_isstring(L, 3)) {
+		lpszCookie = lua_tostring(L, 3);
 	}
 
 	if (lpszStr == NULL) {
@@ -253,7 +259,7 @@ int gethtml(lua_State *L) {
 		return 1;
 	}
 
-	GetHttpFileContent(lpszStr, strHtml);
+	GetHttpFileContent(lpszStr, strHtml, 10, lpszRefer, lpszCookie);
 	lua_pushlstring(L, strHtml.c_str(), strHtml.length());
 	return 1;
 }
@@ -263,6 +269,7 @@ int gethtmlex(lua_State *L) {
 	string strHtml;
 	const char *lpszStr = NULL;
 	const char *lpszRefer = NULL;
+	const char *lpszCookie = NULL;
 	int n = lua_gettop(L);
 	if (n > 0 && lua_isstring(L, 1)) {
 		lpszStr = lua_tostring(L, 1);
@@ -270,13 +277,16 @@ int gethtmlex(lua_State *L) {
 	if (n > 1 && lua_isstring(L, 2)) {
 		lpszRefer = lua_tostring(L, 2);
 	}
+	if (n > 2 && lua_isstring(L, 3)) {
+		lpszCookie = lua_tostring(L, 3);
+	}
 
 	if (lpszStr == NULL) {
 		lua_pushnil(L);
 		return 1;
 	}
 
-	GetHttpFileContentEx(lpszStr, strHtml, 10, lpszRefer);
+	GetHttpFileContentEx(lpszStr, strHtml, 10, lpszRefer, lpszCookie);
 	lua_pushlstring(L, strHtml.c_str(), strHtml.length());
 	return 1;
 }
