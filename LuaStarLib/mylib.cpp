@@ -462,8 +462,8 @@ int encodeurlgbk(lua_State *L)
 		return 1;
 	}
 
-	CString strResult = Star::StrUnit::GBKEncodeURI(lpszStr);
-	lua_pushlstring(L, (const char *)(LPCTSTR)strResult, strResult.GetLength());
+	tstring strResult = Star::StrUnit::GBKEncodeURI(lpszStr);
+	lua_pushlstring(L, strResult.c_str(), strResult.length());
 	return 1;
 }
 
