@@ -1,6 +1,7 @@
 #include "map_config.h"
 
 #include <Windows.h>
+#include <conio.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -89,6 +90,17 @@ void write_stderr(const std::wstring_view text) {
 
 void write_stdout(const std::wstring_view text) {
     write_standard_handle(STD_OUTPUT_HANDLE, text);
+}
+
+void pause_after_script_error() {
+    const auto input = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode = 0;
+    if (input == nullptr || input == INVALID_HANDLE_VALUE ||
+        GetConsoleMode(input, &mode) == FALSE) {
+        return;
+    }
+    write_stderr(L"脚本执行失败，按任意键继续……\n");
+    _getch();
 }
 
 std::string to_utf8(const std::wstring_view text) {
@@ -451,6 +463,7 @@ int run(const int argc, wchar_t* argv[]) {
             message << L"Lua 脚本编译失败：" << script_path << L"\n"
                     << lua_error(api, state.get()) << L"\n";
             write_stderr(message.str());
+            pause_after_script_error();
             return 5;
         }
 
@@ -469,6 +482,7 @@ int run(const int argc, wchar_t* argv[]) {
             message << L"Lua 脚本运行失败：" << script_path << L"\n"
                     << lua_error(api, state.get()) << L"\n";
             write_stderr(message.str());
+            pause_after_script_error();
             return 5;
         }
     } catch (...) {
