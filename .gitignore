@@ -1,7 +1,9 @@
-/bin/*.pdb
-/bin/*.exp
+/bin/
+/lib/
+/temp/
+/.vs/
 /*.suo
 /*.ncb
 
 *.user
-/LuaStarLib/Debug
+*.VC.db

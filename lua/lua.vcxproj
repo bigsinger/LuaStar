@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{62F03C65-8C07-4E0F-81C3-DF4401A680A1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>lua</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="..\Project.Common.props" />
+  <PropertyGroup>
+    <TargetName>lua</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)third_party\lua-5.5.0\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4005;4244;4267;4310;4324;4701;4702;4709;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="lua_compat.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lapi.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lauxlib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lbaselib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lcode.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lcorolib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lctype.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ldblib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ldebug.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ldo.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ldump.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lfunc.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lgc.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\linit.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\liolib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\llex.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lmathlib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lmem.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\loadlib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lobject.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lopcodes.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\loslib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lparser.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lstate.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lstring.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lstrlib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ltable.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ltablib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\ltm.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lundump.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lutf8lib.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lvm.c" />
+    <ClCompile Include="..\third_party\lua-5.5.0\src\lzio.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

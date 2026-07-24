@@ -1,0 +1,16 @@
+LIBRARY star
+EXPORTS
+    luaopen_star
+
+    ; Minimal Lua C API consumed dynamically by runLua.exe.
+    luaL_newstate=lua.luaL_newstate
+    luaL_openlibs=lua.luaL_openlibs
+    luaL_loadbufferx=lua.luaL_loadbufferx
+    lua_pcallk=lua.lua_pcallk
+    lua_close=lua.lua_close
+    lua_tolstring=lua.lua_tolstring
+    lua_settop=lua.lua_settop
+    lua_pushlstring=lua.lua_pushlstring
+    lua_getglobal=lua.lua_getglobal
+    lua_getfield=lua.lua_getfield
+    lua_setfield=lua.lua_setfield
