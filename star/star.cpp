@@ -236,6 +236,32 @@ void debug_write(const std::string_view text) noexcept {
     }
 }
 
+void debug_write_error(const std::string_view text) noexcept {
+    if (!debug_enabled.load()) {
+        return;
+    }
+    try {
+        const auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD mode = 0;
+        const bool console = handle != nullptr &&
+            handle != INVALID_HANDLE_VALUE &&
+            GetConsoleMode(handle, &mode) != FALSE;
+        if (console) {
+            CONSOLE_SCREEN_BUFFER_INFO info{};
+            if (GetConsoleScreenBufferInfo(handle, &info) != FALSE) {
+                SetConsoleTextAttribute(
+                    handle,
+                    FOREGROUND_RED | FOREGROUND_INTENSITY);
+                write_stdout("[star] " + std::string(text) + "\r\n");
+                SetConsoleTextAttribute(handle, info.wAttributes);
+                return;
+            }
+        }
+        debug_write(text);
+    } catch (...) {
+    }
+}
+
 std::filesystem::path script_path(lua_State* state) {
     lua_Debug debug{};
     for (int level = 1; lua_getstack(state, level, &debug) != 0; ++level) {
@@ -623,13 +649,28 @@ int run(lua_State* state) {
 
         debug_write("执行：" + command);
         const auto result = execute(command);
-        debug_write("退出码：" + std::to_string(result.exit_code));
+        const auto exit_text = "退出码：" + std::to_string(result.exit_code);
+        if (result.exit_code != 0) {
+            debug_write_error(exit_text);
+        } else {
+            debug_write(exit_text);
+        }
         if (!result.output.empty() && debug_enabled.load()) {
-            debug_write("输出：");
+            if (result.exit_code != 0) {
+                debug_write_error("输出：");
+            } else {
+                debug_write("输出：");
+            }
             try {
-                write_stdout(result.output);
+                if (result.exit_code != 0) {
+                    debug_write_error(result.output);
+                } else {
+                    write_stdout(result.output);
+                }
                 if (!result.output.ends_with('\n')) {
-                    write_stdout("\r\n");
+                    if (result.exit_code == 0) {
+                        write_stdout("\r\n");
+                    }
                 }
             } catch (...) {
             }

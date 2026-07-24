@@ -91,6 +91,8 @@ assert(code == 0, output)
 
 非零退出码不会抛错，调用者应自行判断。
 
+开启 `star.debug(true)` 后，非零退出码及其命令输出会在交互式控制台以红色高亮显示，便于快速发现执行失败。
+
 ## `star.env(directory)`
 
 把目录追加到当前进程的 `PATH`：
