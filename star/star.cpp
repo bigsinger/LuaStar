@@ -740,17 +740,25 @@ int env(lua_State* state) {
 
 int mkdir(lua_State* state) {
     return guarded(state, [&] {
-        const auto directory = check_path(state, 1);
-        debug_write("创建目录：" + wide_to_utf8(directory.wstring()));
+        const auto count = lua_gettop(state);
+        if (count < 1) {
+            return luaL_error(state, "mkdir 至少需要一个目录参数。");
+        }
         return file_operation(state, "创建目录", [&] {
-            if (directory.empty()) {
-                throw std::runtime_error("目录路径不能为空。");
+            for (int index = 1; index <= count; ++index) {
+                const auto directory = check_path(state, index);
+                debug_write("检查目录：" + wide_to_utf8(directory.wstring()));
+                if (directory.empty()) {
+                    throw std::runtime_error("目录路径不能为空。");
+                }
+                if (std::filesystem::exists(directory)) {
+                    if (!std::filesystem::is_directory(directory)) {
+                        throw std::runtime_error("目标路径已经是一个文件。");
+                    }
+                    continue;
+                }
+                std::filesystem::create_directories(directory);
             }
-            if (std::filesystem::exists(directory) &&
-                !std::filesystem::is_directory(directory)) {
-                throw std::runtime_error("目标路径已经是一个文件。");
-            }
-            std::filesystem::create_directories(directory);
         });
     });
 }

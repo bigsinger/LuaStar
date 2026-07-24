@@ -86,10 +86,13 @@ end
 
 local ok, err = star.remove(base)
 assert(ok, err)
-ok, err = star.mkdir(sourceDir)
+local nestedDir = star.path.join(base, "nested", "deep")
+ok, err = star.mkdir(sourceDir, nestedDir)
 assert(ok, err)
-ok, err = star.fs.mkdir(sourceDir)
+ok, err = star.fs.mkdir(sourceDir, nestedDir)
 assert(ok, err)
+local exists, kind = star.exists(nestedDir)
+assert(exists and kind == "dir")
 ok, err = star.remove("")
 assert(not ok and type(err) == "string")
 

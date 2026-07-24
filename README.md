@@ -44,7 +44,7 @@ print(("Star %s / %s"):format(starVersion, luaVersion))
 print("脚本：" .. root .. file)
 
 assert(star.remove(root .. "output"))
-assert(star.mkdir(root .. "output"))
+assert(star.mkdir(root .. "output", root .. "output\\cache"))
 
 local ok, err = star.copy(root .. "input", root .. "output")
 assert(ok, err)

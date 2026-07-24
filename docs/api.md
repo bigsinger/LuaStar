@@ -136,9 +136,9 @@ star.fs.copy(source, destination)
 
 ### `mkdir`
 
-`star.mkdir(path)` 或 `star.fs.mkdir(path)`
+`star.mkdir(path1, path2, ...)` 或 `star.fs.mkdir(path1, path2, ...)`
 
-递归创建目录。目录已经存在也视为成功；同名文件已经存在时失败。
+按参数顺序递归创建多个目录。每个目录创建前都会检查是否已经存在；已存在的目录直接跳过，同名文件会导致失败。
 
 返回 `true, nil`；失败返回 `false, error`。
 

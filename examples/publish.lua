@@ -6,7 +6,7 @@ star.debug(true)
 
 local ok, err = star.remove(outputDir)
 assert(ok, err)
-ok, err = star.mkdir(outputDir)
+ok, err = star.mkdir(outputDir, star.path.join(outputDir, "cache"))
 assert(ok, err)
 ok, err = star.copy(root .. "input", outputDir)
 assert(ok, err)
