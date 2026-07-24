@@ -41,22 +41,16 @@
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>lua.lib;Bcrypt.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>star.def</ModuleDefinitionFile>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fs_module.cpp" />
-    <ClCompile Include="path_module.cpp" />
-    <ClCompile Include="process_module.cpp" />
-    <ClCompile Include="release_module.cpp" />
     <ClCompile Include="star.cpp" />
-    <ClCompile Include="star_common.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="star_common.h" />
     <None Include="star.def" />
   </ItemGroup>
   <ItemGroup>

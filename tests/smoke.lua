@@ -1,45 +1,151 @@
 local star = require "star"
-local path, fs, process = star.path, star.fs, star.process
 
-assert(star.version() == "1.0.0")
-assert(star.lua_version() == "Lua 5.5.0")
-assert(type(star.pause) == "function")
-assert(star.script_path():match("smoke%.lua$"))
+local expected = {
+    version = "function",
+    debug = "function",
+    path = "table",
+    run = "function",
+    copy = "function",
+    move = "function",
+    env = "function",
+    mkdir = "function",
+    remove = "function",
+    exists = "function",
+    pause = "function",
+    fs = "table",
+}
 
-local root = path.join(
-    star.script_dir(), ".smoke-" .. path.filename(star.exe_dir()))
-fs.reset_dir(root)
+local count = 0
+for name, value in pairs(star) do
+    assert(expected[name], "发现多余接口：" .. name)
+    assert(type(value) == expected[name])
+    count = count + 1
+end
+assert(count == 12)
 
-local ok, message = pcall(function()
-    local source = path.join(root, "source.txt")
-    local copy = path.join(root, "nested", "copy.txt")
+local function checkNames(value, names)
+    local found = 0
+    for key, item in pairs(value) do
+        assert(names[key], "发现多余接口：" .. key)
+        assert(type(item) == "function")
+        found = found + 1
+    end
+    assert(found == names.count)
+end
 
-    fs.write(source, "alpha beta alpha")
-    assert(fs.read(source) == "alpha beta alpha")
-    assert(fs.replace_text(source, "alpha", "gamma") == 2)
-    fs.copy_file(source, copy)
-    assert(fs.is_file(copy))
-    assert(fs.size(copy) == 16)
-    assert(#fs.sha256(copy) == 64)
-    assert(fs.count(root, "*.txt", true) == 2)
-    assert(#fs.list(root, {
-        pattern = "*.txt",
-        recursive = true,
-    }) == 2)
-    fs.assert_no_match(root, {"*.pdb", "*.ilk"}, true)
+checkNames(star.path, {
+    join = true,
+    dir = true,
+    name = true,
+    ext = true,
+    count = 4,
+})
+checkNames(star.fs, {
+    copy = true,
+    move = true,
+    mkdir = true,
+    remove = true,
+    exists = true,
+    count = 5,
+})
 
-    local result = process.run(
-        "cmd.exe", {"/D", "/C", "exit", "0"})
-    assert(result.ok and result.exit_code == 0)
+assert(star.process == nil)
+assert(star.release == nil)
 
-    local captured = process.shell("echo LuaStar", {
-        capture = true,
-        hide = true,
-    })
-    assert(captured.ok and captured.output:match("LuaStar"))
-end)
+local starVersion, luaVersion = star.version()
+assert(starVersion == "1.0.0")
+assert(luaVersion == "Lua 5.5.0")
+assert(star.lua_version == nil)
 
-fs.remove(root)
-assert(ok, message)
+local root, file = star.path()
+assert(root:match("[\\/]$"))
+assert(file == "smoke.lua")
 
+local sample = star.path.join(root, "folder", "sample.txt")
+assert(star.path.name(sample) == "sample.txt")
+assert(star.path.ext(sample) == ".txt")
+assert(star.path.dir(sample):match("folder[\\/]$"))
+
+local base = star.path.join(root, ".smoke space")
+local sourceDir = star.path.join(base, "source")
+local copyDir = star.path.join(base, "copy")
+local movedDir = star.path.join(base, "moved")
+
+local function write(filePath, text)
+    local stream = assert(io.open(filePath, "wb"))
+    assert(stream:write(text))
+    assert(stream:close())
+end
+
+local function read(filePath)
+    local stream = assert(io.open(filePath, "rb"))
+    local text = assert(stream:read("*a"))
+    assert(stream:close())
+    return text
+end
+
+local ok, err = star.remove(base)
+assert(ok, err)
+ok, err = star.mkdir(sourceDir)
+assert(ok, err)
+ok, err = star.fs.mkdir(sourceDir)
+assert(ok, err)
+ok, err = star.remove("")
+assert(not ok and type(err) == "string")
+
+local sourceFile = star.path.join(sourceDir, "source.txt")
+local copiedFile = star.path.join(base, "copied.txt")
+local movedFile = star.path.join(base, "moved.txt")
+write(sourceFile, "LuaStar")
+write(copiedFile, "old")
+
+local found, kind = star.exists(sourceDir)
+assert(found and kind == "dir")
+found, kind = star.exists(sourceFile)
+assert(found and kind == "file")
+found, kind = star.exists(base .. "\\missing")
+assert(not found and kind == nil)
+
+ok, err = star.copy(sourceFile, copiedFile)
+assert(ok, err)
+ok, err = star.move(copiedFile, movedFile)
+assert(ok, err)
+assert(read(movedFile) == "LuaStar")
+
+ok, err = star.fs.copy(sourceDir, copyDir)
+assert(ok, err)
+ok, err = star.fs.move(copyDir, movedDir)
+assert(ok, err)
+assert(read(movedDir .. "\\source.txt") == "LuaStar")
+
+ok, err = star.copy(base .. "\\missing", base .. "\\unused")
+assert(not ok and type(err) == "string")
+
+ok, err = star.env(root)
+assert(ok, err)
+ok, err = star.env(root)
+assert(ok, err)
+local envCode, envText = star.run("echo %PATH%")
+assert(envCode == 0)
+assert(envText:lower():find(
+    root:sub(1, -2):lower(), 1, true))
+
+assert(star.debug() == false)
+assert(star.debug(true) == true)
+local code, output = star.run("echo", "LuaStar")
+assert(code == 0 and output:match("LuaStar"))
+code, output = star.run(
+    "echo failure 1>&2", "&", "exit /B", 7)
+assert(code == 7 and output:match("failure"))
+assert(star.debug(false) == false)
+
+ok, err = star.remove(movedFile)
+assert(ok, err)
+found, kind = star.exists(movedFile)
+assert(not found and kind == nil)
+
+ok, err = star.fs.remove(base)
+assert(ok, err)
+found, kind = star.fs.exists(base)
+assert(not found and kind == nil)
 print("star 冒烟测试通过")

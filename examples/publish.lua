@@ -1,19 +1,20 @@
 local star = require "star"
-local p, fs, release = star.path, star.fs, star.release
+local root = star.path()
+local outputDir = star.path.join(root, "output")
 
-local root = star.script_dir()
-local source = star.require_dir(p.join(root, "input"), "输入目录")
-local output = p.join(root, "output")
+star.debug(true)
 
-fs.reset_dir(output)
-fs.copy_tree(source, output)
-fs.remove_matching(output, {"*.pdb", "*.ilk"}, true)
-fs.assert_no_match(output, {"*.tmp", "*.log"}, true)
+local ok, err = star.remove(outputDir)
+assert(ok, err)
+ok, err = star.mkdir(outputDir)
+assert(ok, err)
+ok, err = star.copy(root .. "input", outputDir)
+assert(ok, err)
 
--- 外部工具可通过 exe、环境变量或 PATH 定位。
-local setup = p.join(root, "setup.nsi")
-if fs.is_file(setup) then
-    release.nsis(setup, { warnings_as_errors = true })
-end
+-- 参数按顺序用空格拼接；含空格的路径由脚本显式加引号。
+local code, output = star.run(
+    [["tools\pack.exe"]],
+    "--input", [["output"]])
 
-print("发布目录已准备：" .. output)
+print(output)
+assert(code == 0, "发布命令失败，退出码：" .. code)

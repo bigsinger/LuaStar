@@ -30,7 +30,7 @@ LuaStar.sln
 Project.Common.props
 lua/             Lua DLL 工程和兼容导出
 runLua/          动态启动器和扁平配置解析
-star/            轻量 Lua 接口
+star/            轻量接口的单文件实现
 third_party/     官方 Lua 源码
 docs/            中文文档
 examples/        通用示例

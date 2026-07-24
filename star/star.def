@@ -2,7 +2,7 @@ LIBRARY star
 EXPORTS
     luaopen_star
 
-    ; Minimal Lua C API consumed dynamically by runLua.exe.
+    ; Minimal Lua C API used dynamically by runLua.exe.
     luaL_newstate=lua.luaL_newstate
     luaL_openlibs=lua.luaL_openlibs
     luaL_loadbufferx=lua.luaL_loadbufferx
