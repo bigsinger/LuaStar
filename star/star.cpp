@@ -860,5 +860,9 @@ extern "C" int luaopen_star(lua_State* state) {
     luaL_newlib(state, fs_functions);
     lua_setfield(state, -2, "fs");
 
+    // Keep the short form `require "star"` useful in release scripts while
+    // still returning the module for the conventional local assignment.
+    lua_pushvalue(state, -1);
+    lua_setglobal(state, "star");
     return 1;
 }

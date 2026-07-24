@@ -1,3 +1,5 @@
+require "star"
+assert(type(star) == "table")
 local star = require "star"
 
 local expected = {

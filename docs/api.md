@@ -3,7 +3,8 @@
 ## 约定
 
 ```lua
-local star = require "star"
+require "star" -- 也会将模块放入全局 star
+local star = require "star" -- 推荐在脚本中使用局部变量
 ```
 
 接口名全部是简单单词。Lua 字符串按 UTF-8 解释，Windows 路径在 DLL 内转换为 UTF-16。不提供工具专用包装或旧名字兼容层。
