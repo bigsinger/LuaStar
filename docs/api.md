@@ -91,6 +91,15 @@ assert(code == 0, output)
 
 非零退出码不会抛错，调用者应自行判断。
 
+## `star.zip(src_dir, output_zip)`
+
+使用 PowerShell `Compress-Archive` 将目录下的全部文件和子目录压缩为 ZIP 文件。返回值与 `star.run` 相同：退出码和输出文本。
+
+```lua
+local code, output = star.zip("input", "output.zip")
+assert(code == 0, output)
+```
+
 开启 `star.debug(true)` 后，退出码为 0 时以绿色显示，非零退出码及其命令输出以红色高亮显示，便于快速判断执行结果。
 
 ## `star.env(directory)`

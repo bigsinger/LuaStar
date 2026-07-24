@@ -10,7 +10,7 @@ LuaStar 是面向 Windows 自动化和发布流程的轻量 Lua 工具集，只�
 
 ```text
 version  debug  path  run  env
-copy  move  mkdir  remove  exists  pause
+copy  move  mkdir  remove  exists  zip  pause
 fs
 ```
 

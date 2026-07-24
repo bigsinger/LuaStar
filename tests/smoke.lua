@@ -7,6 +7,7 @@ local expected = {
     debug = "function",
     path = "table",
     run = "function",
+    zip = "function",
     copy = "function",
     move = "function",
     env = "function",
@@ -23,7 +24,7 @@ for name, value in pairs(star) do
     assert(type(value) == expected[name])
     count = count + 1
 end
-assert(count == 12)
+assert(count == 13)
 
 local function checkNames(value, names)
     local found = 0
@@ -102,6 +103,11 @@ local sourceFile = star.path.join(sourceDir, "source.txt")
 local copiedFile = star.path.join(base, "copied.txt")
 local movedFile = star.path.join(base, "moved.txt")
 write(sourceFile, "LuaStar")
+local archive = star.path.join(base, "archive.zip")
+local zipCode, zipOutput = star.zip(sourceDir, archive)
+assert(zipCode == 0, zipOutput)
+exists, kind = star.exists(archive)
+assert(exists and kind == "file")
 write(copiedFile, "old")
 
 local found, kind = star.exists(sourceDir)

@@ -334,6 +334,18 @@ std::string command_argument(
     return wide_to_utf8(quote(utf8_to_wide(value)));
 }
 
+std::wstring powershell_literal(const std::wstring_view value) {
+    std::wstring result(1, L'\'');
+    for (const auto character : value) {
+        result.push_back(character);
+        if (character == L'\'') {
+            result.push_back(L'\'');
+        }
+    }
+    result.push_back(L'\'');
+    return result;
+}
+
 std::string read_file(const std::filesystem::path& file) {
     std::ifstream stream(file, std::ios::binary);
     if (!stream) {
@@ -713,6 +725,34 @@ int run(lua_State* state) {
     });
 }
 
+int zip(lua_State* state) {
+    return guarded(state, [&] {
+        const auto source = check_path(state, 1);
+        const auto destination = check_path(state, 2);
+        if (source.empty() || destination.empty()) {
+            return luaL_error(state, "zip 需要源目录和目标文件路径。");
+        }
+        if (!std::filesystem::is_directory(source)) {
+            return luaL_error(state, "zip 源路径不是目录。");
+        }
+        const auto source_pattern = source / L"*";
+        const auto script =
+            L"Compress-Archive -Path " +
+            powershell_literal(source_pattern.wstring()) +
+            L" -DestinationPath " +
+            powershell_literal(destination.wstring()) + L" -Force";
+        const auto command =
+            std::string("powershell.exe -NoProfile -NonInteractive -Command ") +
+            wide_to_utf8(script);
+        debug_write("压缩：" + wide_to_utf8(source.wstring()) +
+                    " -> " + wide_to_utf8(destination.wstring()));
+        const auto result = execute(command);
+        lua_pushinteger(state, result.exit_code);
+        push_utf8(state, result.output);
+        return 2;
+    });
+}
+
 int copy(lua_State* state) {
     return guarded(state, [&] {
         const auto source = check_path(state, 1);
@@ -890,6 +930,7 @@ const luaL_Reg functions[] = {
     {"version", version},
     {"debug", debug},
     {"run", run},
+    {"zip", zip},
     {"copy", copy},
     {"move", move},
     {"env", env},
