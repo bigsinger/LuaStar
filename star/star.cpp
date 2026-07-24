@@ -236,7 +236,9 @@ void debug_write(const std::string_view text) noexcept {
     }
 }
 
-void debug_write_error(const std::string_view text) noexcept {
+void debug_write_color(
+    const std::string_view text,
+    const WORD color) noexcept {
     if (!debug_enabled.load()) {
         return;
     }
@@ -251,7 +253,7 @@ void debug_write_error(const std::string_view text) noexcept {
             if (GetConsoleScreenBufferInfo(handle, &info) != FALSE) {
                 SetConsoleTextAttribute(
                     handle,
-                    FOREGROUND_RED | FOREGROUND_INTENSITY);
+                    color);
                 write_stdout("[star] " + std::string(text) + "\r\n");
                 SetConsoleTextAttribute(handle, info.wAttributes);
                 return;
@@ -651,19 +653,29 @@ int run(lua_State* state) {
         const auto result = execute(command);
         const auto exit_text = "退出码：" + std::to_string(result.exit_code);
         if (result.exit_code != 0) {
-            debug_write_error(exit_text);
+            debug_write_color(
+                exit_text,
+                FOREGROUND_RED | FOREGROUND_INTENSITY);
         } else {
-            debug_write(exit_text);
+            debug_write_color(
+                exit_text,
+                FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         }
         if (!result.output.empty() && debug_enabled.load()) {
             if (result.exit_code != 0) {
-                debug_write_error("输出：");
+                debug_write_color(
+                    "输出：",
+                    result.exit_code == 0
+                        ? FOREGROUND_GREEN | FOREGROUND_INTENSITY
+                        : FOREGROUND_RED | FOREGROUND_INTENSITY);
             } else {
                 debug_write("输出：");
             }
             try {
                 if (result.exit_code != 0) {
-                    debug_write_error(result.output);
+                    debug_write_color(
+                        result.output,
+                        FOREGROUND_RED | FOREGROUND_INTENSITY);
                 } else {
                     write_stdout(result.output);
                 }

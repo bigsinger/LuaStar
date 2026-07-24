@@ -88,6 +88,24 @@ void write_stderr(const std::wstring_view text) {
     write_standard_handle(STD_ERROR_HANDLE, text);
 }
 
+void write_error(const std::wstring_view text) {
+    const auto handle = GetStdHandle(STD_ERROR_HANDLE);
+    DWORD mode = 0;
+    if (handle != nullptr && handle != INVALID_HANDLE_VALUE &&
+        GetConsoleMode(handle, &mode) != FALSE) {
+        CONSOLE_SCREEN_BUFFER_INFO info{};
+        if (GetConsoleScreenBufferInfo(handle, &info) != FALSE) {
+            SetConsoleTextAttribute(
+                handle,
+                FOREGROUND_RED | FOREGROUND_INTENSITY);
+            write_stderr(text);
+            SetConsoleTextAttribute(handle, info.wAttributes);
+            return;
+        }
+    }
+    write_stderr(text);
+}
+
 void write_stdout(const std::wstring_view text) {
     write_standard_handle(STD_OUTPUT_HANDLE, text);
 }
@@ -462,7 +480,7 @@ int run(const int argc, wchar_t* argv[]) {
             std::wostringstream message;
             message << L"Lua 脚本编译失败：" << script_path << L"\n"
                     << lua_error(api, state.get()) << L"\n";
-            write_stderr(message.str());
+            write_error(message.str());
             pause_after_script_error();
             return 5;
         }
@@ -481,7 +499,7 @@ int run(const int argc, wchar_t* argv[]) {
             std::wostringstream message;
             message << L"Lua 脚本运行失败：" << script_path << L"\n"
                     << lua_error(api, state.get()) << L"\n";
-            write_stderr(message.str());
+            write_error(message.str());
             pause_after_script_error();
             return 5;
         }
