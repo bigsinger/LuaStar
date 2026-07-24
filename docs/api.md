@@ -70,22 +70,22 @@ print(root .. file)
 
 ```lua
 local code, output = star.run(
-    '"tools\\pack.exe"', "--mode", "release")
+    "tools\\pack.exe", "--mode", "release")
 ```
 
 | 项目 | 说明 |
 |---|---|
 | 参数 | 任意个可转为字符串的 Lua 值 |
-| 拼接规则 | 每项转为字符串，再用一个半角空格依次连接 |
+| 拼接规则 | 每项转为字符串；需要时自动进行 Windows 命令行引号转义，再用一个半角空格依次连接 |
 | 执行方式 | 通过系统命令解释器执行 |
 | 第一个返回值 | 退出码；启动失败或空命令为 `-1` |
 | 第二个返回值 | 标准输出和标准错误合并后的文本 |
 
-接口不自动给参数加引号。含空格的路径由脚本明确加双引号：
+含空格、引号或空值的参数会自动加引号并转义，脚本无需再定义 `quote` 辅助函数：
 
 ```lua
-local exe = [["C:\Program Files\Tool\tool.exe"]]
-local code, output = star.run(exe, "--input", [["input files"]])
+local exe = [[C:\Program Files\Tool\tool.exe]]
+local code, output = star.run(exe, "--input", [[input files]])
 assert(code == 0, output)
 ```
 

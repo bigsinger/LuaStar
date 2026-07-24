@@ -317,6 +317,23 @@ std::wstring command_shell() {
     return L"cmd.exe";
 }
 
+std::string command_argument(
+    const std::string_view value,
+    const bool first,
+    const bool shell_mode) {
+    const bool shell_expression =
+        value.find_first_of("&|<>") != std::string_view::npos;
+    const bool executable_path =
+        value.find_first_of("\\/:") != std::string_view::npos ||
+        value.find(".exe") != std::string_view::npos;
+    if (shell_mode || (first && (shell_expression ||
+                  (value.find_first_of(" \t") != std::string_view::npos &&
+                   !executable_path)))) {
+        return std::string(value);
+    }
+    return wide_to_utf8(quote(utf8_to_wide(value)));
+}
+
 std::string read_file(const std::filesystem::path& file) {
     std::ifstream stream(file, std::ios::binary);
     if (!stream) {
@@ -645,7 +662,10 @@ int run(lua_State* state) {
             if (index > 1) {
                 command.push_back(' ');
             }
-            command.append(value, length);
+            command.append(command_argument(
+                std::string_view(value, length),
+                index == 1,
+                command.find_first_of("&|<>") != std::string::npos));
             lua_pop(state, 1);
         }
 
