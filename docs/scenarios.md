@@ -11,6 +11,7 @@
 | 定位和拆分路径 | `path`、`join`、`dir`、`name`、`ext` |
 | 临时扩展工具搜索目录 | `env` |
 | 执行构建、打包、签名和脚本 | `run` |
+| 新建或增量更新 ZIP | `zip` |
 | 准备、移动、创建和清理产物 | `copy`、`move`、`mkdir`、`remove` |
 | 判断文件或目录 | `exists` |
 | 等待人工检查 | `pause` |
@@ -30,7 +31,12 @@ local ok, err = star.copy(root .. "input", output)
 assert(ok, err)
 
 local code, text = star.run(
-    [["tools\pack.exe"]], [["output"]])
+    "tools\\pack.exe", "--input", output)
+assert(code == 0, text)
+
+code, text = star.zip(
+    output,
+    star.path.join(root, "release", "package.zip"))
 assert(code == 0, text)
 ```
 
@@ -42,7 +48,8 @@ assert(code == 0, text)
 - 文件动作同时提供顶层写法，避免简单脚本必须声明局部模块。
 - 文件内容处理继续使用 Lua 的 `io`。
 - 普通环境变量读取使用 `os.getenv`；`star.env` 只负责为当前流程追加 `PATH`。
-- 哈希、压缩、网络、JSON、注册表和桌面自动化按需放入独立 DLL。
+- `star.zip` 只覆盖常用 ZIP 新建和更新；加密、分卷、过滤等复杂压缩继续交给专用工具。
+- 哈希、网络、JSON、注册表和桌面自动化按需放入独立 DLL。
 - 产品名称、版本规则、证书、账号、私有目录和业务清单留在私有脚本。
 
 ## 新接口准入

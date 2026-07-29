@@ -361,11 +361,9 @@ struct RunResult final {
     std::string output;
 };
 
-RunResult execute(const std::string_view command) {
-    if (command.empty()) {
-        return {-1, "命令不能为空。"};
-    }
-
+RunResult execute_process(
+    const wchar_t* application,
+    std::wstring command_line) {
     TemporaryFile output_file;
     SECURITY_ATTRIBUTES security{};
     security.nLength = sizeof(security);
@@ -390,18 +388,13 @@ RunResult execute(const std::string_view command) {
     startup.hStdOutput = output.get();
     startup.hStdError = output.get();
 
-    const auto shell = command_shell();
-    auto command_line = quote(shell);
-    command_line.append(L" /D /S /C \"");
-    command_line.append(utf8_to_wide(command));
-    command_line.push_back(L'"');
     std::vector<wchar_t> mutable_command(
         command_line.begin(), command_line.end());
     mutable_command.push_back(L'\0');
 
     PROCESS_INFORMATION process{};
     const auto created = CreateProcessW(
-        shell.c_str(),
+        application,
         mutable_command.data(),
         nullptr,
         nullptr,
@@ -434,6 +427,85 @@ RunResult execute(const std::string_view command) {
         static_cast<lua_Integer>(exit_code),
         read_file(output_file.path()),
     };
+}
+
+RunResult execute(const std::string_view command) {
+    if (command.empty()) {
+        return {-1, "命令不能为空。"};
+    }
+
+    const auto shell = command_shell();
+    auto command_line = quote(shell);
+    command_line.append(L" /D /S /C \"");
+    command_line.append(utf8_to_wide(command));
+    command_line.push_back(L'"');
+    return execute_process(shell.c_str(), std::move(command_line));
+}
+
+std::string base64_encode(const std::wstring_view text) {
+    static_assert(sizeof(wchar_t) == 2);
+    constexpr std::string_view alphabet =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const auto* bytes =
+        reinterpret_cast<const unsigned char*>(text.data());
+    const auto size = text.size() * sizeof(wchar_t);
+    std::string result;
+    result.reserve(((size + 2) / 3) * 4);
+
+    for (std::size_t index = 0; index < size; index += 3) {
+        const auto remaining = size - index;
+        const auto value =
+            static_cast<unsigned int>(bytes[index]) << 16 |
+            (remaining > 1
+                ? static_cast<unsigned int>(bytes[index + 1]) << 8
+                : 0U) |
+            (remaining > 2
+                ? static_cast<unsigned int>(bytes[index + 2])
+                : 0U);
+        result.push_back(alphabet[(value >> 18) & 0x3f]);
+        result.push_back(alphabet[(value >> 12) & 0x3f]);
+        result.push_back(
+            remaining > 1 ? alphabet[(value >> 6) & 0x3f] : '=');
+        result.push_back(remaining > 2 ? alphabet[value & 0x3f] : '=');
+    }
+    return result;
+}
+
+RunResult execute_powershell(const std::wstring_view script) {
+    auto command_line =
+        std::wstring(L"powershell.exe -NoLogo -NoProfile -NonInteractive "
+                     L"-OutputFormat Text -EncodedCommand ");
+    command_line.append(utf8_to_wide(base64_encode(script)));
+    return execute_process(nullptr, std::move(command_line));
+}
+
+void debug_result(const RunResult& result) noexcept {
+    const auto success = result.exit_code == 0;
+    const auto color = static_cast<WORD>(
+        success
+            ? FOREGROUND_GREEN | FOREGROUND_INTENSITY
+            : FOREGROUND_RED | FOREGROUND_INTENSITY);
+    debug_write_color(
+        "退出码：" + std::to_string(result.exit_code),
+        color);
+    if (result.output.empty() || !debug_enabled.load()) {
+        return;
+    }
+
+    if (success) {
+        debug_write("输出：");
+        try {
+            write_stdout(result.output);
+            if (!result.output.ends_with('\n')) {
+                write_stdout("\r\n");
+            }
+        } catch (...) {
+        }
+        return;
+    }
+
+    debug_write_color("输出：", color);
+    debug_write_color(result.output, color);
 }
 
 bool path_starts_with(
@@ -591,7 +663,7 @@ int file_operation(
 }
 
 int version(lua_State* state) {
-    lua_pushliteral(state, "1.0.0");
+    lua_pushliteral(state, "1.1.0");
     lua_pushliteral(state, LUA_RELEASE);
     return 2;
 }
@@ -683,42 +755,7 @@ int run(lua_State* state) {
 
         debug_write("执行：" + command);
         const auto result = execute(command);
-        const auto exit_text = "退出码：" + std::to_string(result.exit_code);
-        if (result.exit_code != 0) {
-            debug_write_color(
-                exit_text,
-                FOREGROUND_RED | FOREGROUND_INTENSITY);
-        } else {
-            debug_write_color(
-                exit_text,
-                FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-        }
-        if (!result.output.empty() && debug_enabled.load()) {
-            if (result.exit_code != 0) {
-                debug_write_color(
-                    "输出：",
-                    result.exit_code == 0
-                        ? FOREGROUND_GREEN | FOREGROUND_INTENSITY
-                        : FOREGROUND_RED | FOREGROUND_INTENSITY);
-            } else {
-                debug_write("输出：");
-            }
-            try {
-                if (result.exit_code != 0) {
-                    debug_write_color(
-                        result.output,
-                        FOREGROUND_RED | FOREGROUND_INTENSITY);
-                } else {
-                    write_stdout(result.output);
-                }
-                if (!result.output.ends_with('\n')) {
-                    if (result.exit_code == 0) {
-                        write_stdout("\r\n");
-                    }
-                }
-            } catch (...) {
-            }
-        }
+        debug_result(result);
         lua_pushinteger(state, result.exit_code);
         push_utf8(state, result.output);
         return 2;
@@ -727,26 +764,126 @@ int run(lua_State* state) {
 
 int zip(lua_State* state) {
     return guarded(state, [&] {
-        const auto source = check_path(state, 1);
-        const auto destination = check_path(state, 2);
-        if (source.empty() || destination.empty()) {
-            return luaL_error(state, "zip 需要源目录和目标文件路径。");
+        const auto count = lua_gettop(state);
+        if (count < 2) {
+            return luaL_error(
+                state,
+                "zip 至少需要一个输入路径和一个 ZIP 文件路径。");
         }
-        if (!std::filesystem::is_directory(source)) {
-            return luaL_error(state, "zip 源路径不是目录。");
+
+        std::vector<std::filesystem::path> sources;
+        sources.reserve(static_cast<std::size_t>(count - 1));
+        for (int index = 1; index < count; ++index) {
+            auto source = check_path(state, index);
+            if (source.empty()) {
+                return luaL_error(state, "zip 输入路径不能为空。");
+            }
+            source =
+                std::filesystem::absolute(source).lexically_normal();
+            if (!std::filesystem::is_regular_file(source) &&
+                !std::filesystem::is_directory(source)) {
+                return luaL_error(
+                    state,
+                    "zip 输入路径不是普通文件或目录：%s",
+                    wide_to_utf8(source.wstring()).c_str());
+            }
+            if (source.filename().empty()) {
+                return luaL_error(
+                    state,
+                    "zip 不支持把文件系统根目录作为输入。");
+            }
+            for (const auto& existing : sources) {
+                if (_wcsicmp(
+                        existing.wstring().c_str(),
+                        source.wstring().c_str()) == 0) {
+                    return luaL_error(
+                        state,
+                        "zip 输入路径不能重复：%s",
+                        wide_to_utf8(source.wstring()).c_str());
+                }
+                if (_wcsicmp(
+                        existing.filename().c_str(),
+                        source.filename().c_str()) == 0) {
+                    return luaL_error(
+                        state,
+                        "zip 输入项的顶层名称不能重复：%s",
+                        wide_to_utf8(source.filename().wstring()).c_str());
+                }
+            }
+            sources.push_back(std::move(source));
         }
-        const auto source_pattern = source / L"*";
-        const auto script =
-            L"Compress-Archive -Path " +
-            powershell_literal(source_pattern.wstring()) +
-            L" -DestinationPath " +
-            powershell_literal(destination.wstring()) + L" -Force";
-        const auto command =
-            std::string("powershell.exe -NoProfile -NonInteractive -Command ") +
-            wide_to_utf8(script);
-        debug_write("压缩：" + wide_to_utf8(source.wstring()) +
-                    " -> " + wide_to_utf8(destination.wstring()));
-        const auto result = execute(command);
+
+        auto destination = check_path(state, count);
+        if (destination.empty()) {
+            return luaL_error(state, "zip 输出路径不能为空。");
+        }
+        destination =
+            std::filesystem::absolute(destination).lexically_normal();
+        if (_wcsicmp(destination.extension().c_str(), L".zip") != 0) {
+            return luaL_error(state, "zip 输出文件必须使用 .zip 扩展名。");
+        }
+        if (std::filesystem::exists(destination) &&
+            !std::filesystem::is_regular_file(destination)) {
+            return luaL_error(state, "zip 输出路径不是普通文件。");
+        }
+
+        for (const auto& source : sources) {
+            if (_wcsicmp(
+                    source.wstring().c_str(),
+                    destination.wstring().c_str()) == 0) {
+                return luaL_error(
+                    state,
+                    "zip 输出文件不能同时作为输入文件。");
+            }
+            if (std::filesystem::is_directory(source) &&
+                path_starts_with(destination, source)) {
+                return luaL_error(
+                    state,
+                    "zip 输出文件不能位于输入目录内部。");
+            }
+        }
+
+        ensure_parent(destination);
+        std::wstring script =
+            L"$ErrorActionPreference = 'Stop'\n"
+            L"$ProgressPreference = 'SilentlyContinue'\n"
+            L"try {\n"
+            L"$paths = @(\n";
+        for (std::size_t index = 0; index < sources.size(); ++index) {
+            script.append(L"    ");
+            script.append(powershell_literal(sources[index].wstring()));
+            if (index + 1 < sources.size()) {
+                script.push_back(L',');
+            }
+            script.append(L"\n");
+        }
+        script.append(L")\n$destination = ");
+        script.append(powershell_literal(destination.wstring()));
+        script.append(
+            L"\nif (Test-Path -LiteralPath $destination -PathType Leaf) {\n"
+            L"    Compress-Archive -LiteralPath $paths "
+            L"-DestinationPath $destination -Update\n"
+            L"} else {\n"
+            L"    Compress-Archive -LiteralPath $paths "
+            L"-DestinationPath $destination\n"
+            L"}\n"
+            L"} catch {\n"
+            L"    [Console]::Error.Write(($_ | Out-String))\n"
+            L"    exit 1\n"
+            L"}\n");
+
+        std::string source_text;
+        for (const auto& source : sources) {
+            if (!source_text.empty()) {
+                source_text.append(", ");
+            }
+            source_text.append(wide_to_utf8(source.wstring()));
+        }
+        debug_write(
+            "压缩：" + source_text + " -> " +
+            wide_to_utf8(destination.wstring()));
+        const auto result = execute_powershell(script);
+        debug_result(result);
         lua_pushinteger(state, result.exit_code);
         push_utf8(state, result.output);
         return 2;

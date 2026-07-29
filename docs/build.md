@@ -76,8 +76,11 @@ Lua 5.5 把 `luaL_openlibs` 改为宏，因此 `lua/lua_compat.c` 提供同名�
 ```powershell
 Push-Location .\bin\Release
 .\runLua.exe ..\..\tests\smoke.lua
+.\runLua.exe ..\..\tests\zip.lua
 Pop-Location
 ```
+
+`smoke.lua` 验证全部公开接口及常用文件操作；`zip.lua` 会真实创建、更新并解压 ZIP，覆盖多输入、绝对/相对路径、目录层级、中文文件名、覆盖替换、旧条目保留和错误场景。测试结束会清理自身夹具。
 
 可使用 Visual Studio 自带的工具确认依赖和导出：
 
