@@ -56,7 +56,7 @@ assert(star.process == nil)
 assert(star.release == nil)
 
 local starVersion, luaVersion = star.version()
-assert(starVersion == "1.1.0")
+assert(starVersion == "1.1.1")
 assert(luaVersion == "Lua 5.5.0")
 assert(star.lua_version == nil)
 

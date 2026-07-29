@@ -6,7 +6,7 @@ LuaStar 是面向 Windows 自动化和发布流程的轻量 Lua 工具集，只�
 - `lua.dll`：由官方 Lua 5.5.0 源码构建。
 - `star.dll`：提供少量直接接口和两个小工具表，并转发 `runLua` 所需的最小 Lua C API。
 
-当前 Star 版本为 `1.1.0`。
+当前 Star 版本为 `1.1.1`。
 
 常用接口全部使用单词命名：
 

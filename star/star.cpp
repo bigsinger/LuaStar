@@ -363,30 +363,36 @@ struct RunResult final {
 
 RunResult execute_process(
     const wchar_t* application,
-    std::wstring command_line) {
+    std::wstring command_line,
+    const bool capture_output = true) {
     TemporaryFile output_file;
     SECURITY_ATTRIBUTES security{};
     security.nLength = sizeof(security);
     security.bInheritHandle = TRUE;
 
-    Handle output(CreateFileW(
-        output_file.path().c_str(),
-        GENERIC_WRITE,
-        FILE_SHARE_READ | FILE_SHARE_WRITE,
-        &security,
-        CREATE_ALWAYS,
-        FILE_ATTRIBUTE_TEMPORARY,
-        nullptr));
-    if (output.get() == INVALID_HANDLE_VALUE) {
-        return {-1, "无法创建命令输出文件：" + windows_error()};
+    Handle output;
+    if (capture_output) {
+        output.reset(CreateFileW(
+            output_file.path().c_str(),
+            GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            &security,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_TEMPORARY,
+            nullptr));
+        if (output.get() == INVALID_HANDLE_VALUE) {
+            return {-1, "无法创建命令输出文件：" + windows_error()};
+        }
     }
 
     STARTUPINFOW startup{};
     startup.cb = sizeof(startup);
-    startup.dwFlags = STARTF_USESTDHANDLES;
-    startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-    startup.hStdOutput = output.get();
-    startup.hStdError = output.get();
+    if (capture_output) {
+        startup.dwFlags = STARTF_USESTDHANDLES;
+        startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+        startup.hStdOutput = output.get();
+        startup.hStdError = output.get();
+    }
 
     std::vector<wchar_t> mutable_command(
         command_line.begin(), command_line.end());
@@ -425,7 +431,7 @@ RunResult execute_process(
 
     return {
         static_cast<lua_Integer>(exit_code),
-        read_file(output_file.path()),
+        capture_output ? read_file(output_file.path()) : std::string(),
     };
 }
 
@@ -472,11 +478,49 @@ std::string base64_encode(const std::wstring_view text) {
 }
 
 RunResult execute_powershell(const std::wstring_view script) {
+    const auto output = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode = 0;
+    const bool show_progress =
+        output != nullptr &&
+        output != INVALID_HANDLE_VALUE &&
+        GetConsoleMode(output, &mode) != FALSE;
+
+    TemporaryFile error_file;
+    std::wstring wrapped_script = L"$ErrorActionPreference = 'Stop'\n";
+    if (!show_progress) {
+        wrapped_script.append(
+            L"$ProgressPreference = 'SilentlyContinue'\n");
+    }
+    wrapped_script.append(L"try {\n");
+    wrapped_script.append(script);
+    wrapped_script.append(L"\n} catch {\n");
+    if (show_progress) {
+        wrapped_script.append(L"    $utf8 = New-Object "
+                              L"System.Text.UTF8Encoding($false)\n"
+                              L"    [IO.File]::WriteAllText(");
+        wrapped_script.append(
+            powershell_literal(error_file.path().wstring()));
+        wrapped_script.append(
+            L", ($_ | Out-String), $utf8)\n");
+    } else {
+        wrapped_script.append(
+            L"    [Console]::Error.Write(($_ | Out-String))\n");
+    }
+    wrapped_script.append(L"    exit 1\n}\n");
+
     auto command_line =
         std::wstring(L"powershell.exe -NoLogo -NoProfile -NonInteractive "
                      L"-OutputFormat Text -EncodedCommand ");
-    command_line.append(utf8_to_wide(base64_encode(script)));
-    return execute_process(nullptr, std::move(command_line));
+    command_line.append(
+        utf8_to_wide(base64_encode(wrapped_script)));
+    auto result = execute_process(
+        nullptr,
+        std::move(command_line),
+        !show_progress);
+    if (show_progress && result.exit_code != 0 && result.output.empty()) {
+        result.output = read_file(error_file.path());
+    }
+    return result;
 }
 
 void debug_result(const RunResult& result) noexcept {
@@ -663,7 +707,7 @@ int file_operation(
 }
 
 int version(lua_State* state) {
-    lua_pushliteral(state, "1.1.0");
+    lua_pushliteral(state, "1.1.1");
     lua_pushliteral(state, LUA_RELEASE);
     return 2;
 }
@@ -844,11 +888,7 @@ int zip(lua_State* state) {
         }
 
         ensure_parent(destination);
-        std::wstring script =
-            L"$ErrorActionPreference = 'Stop'\n"
-            L"$ProgressPreference = 'SilentlyContinue'\n"
-            L"try {\n"
-            L"$paths = @(\n";
+        std::wstring script = L"$paths = @(\n";
         for (std::size_t index = 0; index < sources.size(); ++index) {
             script.append(L"    ");
             script.append(powershell_literal(sources[index].wstring()));
@@ -866,10 +906,6 @@ int zip(lua_State* state) {
             L"} else {\n"
             L"    Compress-Archive -LiteralPath $paths "
             L"-DestinationPath $destination\n"
-            L"}\n"
-            L"} catch {\n"
-            L"    [Console]::Error.Write(($_ | Out-String))\n"
-            L"    exit 1\n"
             L"}\n");
 
         std::string source_text;
